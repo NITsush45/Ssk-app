@@ -1,0 +1,11 @@
+Model Information:
+* title:	Boy warrior
+* source:	https://sketchfab.com/3d-models/boy-warrior-66707b5e61444da3ad8f1502530db9f8
+* author:	botupo (https://sketchfab.com/botupo3D)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Boy warrior" (https://sketchfab.com/3d-models/boy-warrior-66707b5e61444da3ad8f1502530db9f8) by botupo (https://sketchfab.com/botupo3D) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

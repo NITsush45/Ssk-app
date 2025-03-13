@@ -2,20 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
 
-@media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 27 27 27;
+    --foreground: 225 225 225;
+    --muted: 115 115 115;
+    --accent: 254 254 91;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Montserrat', sans-serif;
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    overflow: hidden;
+  }
+
+  #__next {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-root {
+    background-color: rgb(var(--background));
+  }
+
+  .text-root {
+    color: rgb(var(--foreground));
+  }
+
+  .pause {
+    animation-play-state: paused;
+  }
+
+  .font-lobster {
+    font-family: 'Lobster', cursive;
+  }
+}
+.scrollable-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.scrollable-content:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.5) rgba(0, 0, 0, 0);
+}
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.scrollable-content:hover::-webkit-scrollbar {
+  display: block; 
+}
+
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+.raindrop {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 20px; 
+  background: rgba(255, 255, 255, 0.7); 
+  animation: fall linear infinite;
+  z-index: 10;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb {
+  scrollbar-color: #6b7280 #e5e7eb;
+}
+
+
+
+@layer utilities {
+  .firefly {
+    position: absolute;
+    background-color: rgb(var(--accent));
+    border-radius: 50%;
+    box-shadow: 0 0 8px 4px rgba(var(--accent), 0.5),
+      0 0 15px 8px rgba(var(--accent), 0.3);
+    animation: fly linear infinite;
+  }
 }
