@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ClientOnly from "@/components/ClientOnly";
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from '@/hooks/useAuth';
 
 // Dynamically import components
 const RenderModel = dynamic(
@@ -32,6 +33,30 @@ const Footer = dynamic(
 
 
 export default function Home() {
+  // Authentication check
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  
+  // If authentication is still loading, show a loading state
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        height: "100vh",
+        background: "#000"
+      }}>
+        <p style={{ color: "#00FF00", fontSize: "18px" }}>Loading...</p>
+      </div>
+    );
+  }
+  
+  // If not authenticated, don't render the main content
+  if (!isAuthenticated) {
+    return null; // You could also redirect to login page if needed
+  }
+
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -39,7 +64,6 @@ export default function Home() {
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
-  const router = useRouter();
   
   const swipeImages = [
     "/background/sskimg2.jpeg",
