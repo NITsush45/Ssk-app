@@ -4,11 +4,32 @@ import axios from "axios";
 import Image from "next/image";
 import { FiSearch } from "react-icons/fi";
 import bg from "../../public/background/codebg.jpg";
-import RenderModel from "@/components/RenderModel";
-import Model from "@/components/models/model";
+import dynamic from 'next/dynamic';
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
-import Navigation from "@/components/navigation";
-import Footer from "./projects/footer";
+import ClientOnly from "@/components/ClientOnly";
+import { useRouter, usePathname } from "next/navigation";
+
+// Dynamically import components
+const RenderModel = dynamic(
+  () => import("@/components/RenderModel"),
+  { ssr: false, loading: () => <div>Loading 3D...</div> }
+);
+
+const Model = dynamic(
+  () => import("@/components/models/model"),
+  { ssr: false }
+);
+
+const Navigation = dynamic(
+  () => import("@/components/navigation"),
+  { ssr: false }
+);
+
+const Footer = dynamic(
+  () => import("./projects/footer"),
+  { ssr: false }
+);
+
 
 export default function Home() {
   const [tracks, setTracks] = useState([]);
@@ -18,6 +39,8 @@ export default function Home() {
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
+  const router = useRouter();
+  
   const swipeImages = [
     "/background/sskimg2.jpeg",
     "/background/sskimg.jpeg",
@@ -28,13 +51,14 @@ export default function Home() {
     "/background/sskimg7.jpeg",
     "/background/sskimg8.jpeg",
   ];
+  
   useEffect(() => {
     const interval = setInterval(() => {
       setSwipeIndex((prev) => (prev + 1) % swipeImages.length);
     }, 4000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [swipeImages.length]);
+  
   useEffect(() => {
     fetchSpotifyTracks("top hits");
   }, []);
@@ -73,21 +97,18 @@ export default function Home() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
-        <Image
-          src={bg}
-          alt="background-image"
-          fill
-          style={{ objectFit: "cover", opacity: 0.6 }}
-        />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <ClientOnly>
+        <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
+          <Image
+            src={bg}
+            alt="background-image"
+            fill
+            style={{ objectFit: "cover", opacity: 0.6 }}
+            priority
+          />
+        </div>
+      </ClientOnly>
 
       <main
         style={{
@@ -101,16 +122,19 @@ export default function Home() {
           zIndex: 10,
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            left: 0,
-            width: "100%",
-            zIndex: 999,
-          }}
-        >
-          <Navigation />
-        </div>
+        <ClientOnly>
+          <div
+            style={{
+              position: "relative",
+              left: 0,
+              width: "100%",
+              zIndex: 999,
+            }}
+          >
+            <Navigation />
+          </div>
+        </ClientOnly>
+        
         <div
           style={{
             position: "absolute",
@@ -216,7 +240,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Hello text below the image container */}
           <div
             style={{
               marginTop: "15px",
@@ -327,18 +350,17 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* Container for Grid & Text */}
+        
         <div
           style={{
             position: "relative",
             zIndex: 15,
             display: "flex",
             padding: "20px",
-            marginTop: "40px",
+            marginTop: "60px",
             flex: "1",
           }}
         >
-          {/* Left Section - Spotify Grid */}
           <div style={{ flex: 3, paddingRight: "20px" }}>
             <h2
               style={{
@@ -358,7 +380,6 @@ export default function Home() {
               Your Song Buddy
             </h2>
 
-            {/* Search Bar */}
             <div
               style={{
                 display: "flex",
@@ -463,41 +484,43 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Model Section */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 14.5,
-            pointerEvents: "none",
-          }}
-        >
-          <RenderModel>
-            <Model />
-          </RenderModel>
-        </div>
+        <ClientOnly>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 14.5,
+              pointerEvents: "none",
+            }}
+          >
+            <RenderModel>
+              <Model />
+            </RenderModel>
+          </div>
+        </ClientOnly>
       </main>
 
-      {/* Footer - now part of the normal document flow */}
-      <footer
-        style={{
-          width: "100%",
-          zIndex: 100,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          backdropFilter: "blur(5px)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center",
-          flexShrink: 0,
-          marginTop: "auto",
-        }}
-      >
-        <Footer />
-      </footer>
+      <ClientOnly>
+        <footer
+          style={{
+            width: "100%",
+            zIndex: 100,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            flexShrink: 0,
+            marginTop: "auto",
+          }}
+        >
+          <Footer />
+        </footer>
+      </ClientOnly>
     </div>
   );
 }

@@ -64,16 +64,27 @@ const ContactUs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Here you would add your API call
-      // Simulating API call with delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || 'Submission failed');
+      }
+  
       setSubmitStatus({
         submitted: true,
         success: true,
-        message: "Thank you for your message! We'll get back to you soon.",
+        message: "Thank you! Your message has been sent successfully to Sushant ;).",
       });
-
+  
+      // Reset form
       setFormData({
         name: "",
         email: "",
@@ -81,12 +92,12 @@ const ContactUs = () => {
         category: "",
         message: "",
       });
+  
     } catch (error) {
       setSubmitStatus({
         submitted: true,
         success: false,
-        message:
-          "There was an error submitting your message. Please try again.",
+        message: error.message || "There was an error submitting your message. Please try again.",
       });
       console.error("Form submission error:", error);
     }
@@ -549,6 +560,7 @@ const ContactUs = () => {
                   Select a category
                 </option>
                 <option value="general">General Inquiry</option>
+                <option value="business">Opportunity Related</option>
                 <option value="support">Technical Support</option>
                 <option value="feedback">Feedback</option>
                 <option value="business">Business Opportunity</option>

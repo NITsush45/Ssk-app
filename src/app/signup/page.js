@@ -1,235 +1,354 @@
 "use client";
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import Footer from "../projects/footer";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+const particles = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: Math.random() * 5 + 2,
+  duration: Math.random() * 20 + 10,
+  delay: Math.random() * 2,
+}));
 
 const SignUpPage = () => {
+  const router = useRouter();
+  const [formStep, setFormStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [gradientAngle, setGradientAngle] = useState(135);
+
   const [formData, setFormData] = useState({
-    photo: null,
+    photo: "",
     name: "",
     email: "",
     phone: "",
-    password: "",
     organization: "",
+    password: "",
   });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGradientAngle((prevAngle) => (prevAngle + 1) % 360);
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        window.location.href = '/'; // Full page reload to trigger auth check
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
+
+  const fieldGroups = [
+    {
+      fields: ["photo"],
+      title: "Profile Picture",
+      description: "Upload a profile photo (optional)",
+    },
+    {
+      fields: ["name", "email"],
+      title: "Basic Information",
+      description: "Tell us about yourself",
+    },
+    {
+      fields: ["phone", "organization"],
+      title: "Contact Details",
+      description: "How can we reach you?",
+    },
+    {
+      fields: ["password"],
+      title: "Security",
+      description: "Create a secure password",
+    },
+  ];
+
+  const validations = {
+    name: (v) => v.trim().length >= 2 || "Name must be at least 2 characters",
+    email: (v) => /^\S+@\S+\.\S+$/.test(v) || "Invalid email address",
+    password: (v) => v.length >= 8 || "Password must be at least 8 characters",
+    phone: (v) => !v || /^\d{10}$/.test(v) || "Invalid phone number",
+    organization: () => true,
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, photo: URL.createObjectURL(file) });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Submitted Data:", formData);
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => setPhotoPreview(e.target?.result || "");
+      reader.readAsDataURL(file);
+
+      const storage = getStorage();
+      const storageRef = ref(storage, `users/${Date.now()}_${file.name}`);
+      setUploadProgress(10);
+      const snapshot = await uploadBytes(storageRef, file);
+      setUploadProgress(70);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setFormData((prev) => ({ ...prev, photo: downloadURL }));
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 2000);
+    } catch (error) {
+      alert("Photo upload failed. Please try again.");
+      setUploadProgress(0);
+    }
   };
 
+  const validateStep = (step) => {
+    const currentFields = fieldGroups[step]?.fields || [];
+    const newErrors = {};
+
+    currentFields.forEach((field) => {
+      if (field === "photo") return;
+      const validator = validations[field];
+      if (validator) {
+        const result = validator(formData[field] || "");
+        if (result !== true) newErrors[field] = result;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    if (!validateStep(formStep)) return;
+    setFormStep((prev) => Math.min(prev + 1, fieldGroups.length - 1));
+  };
+
+  const prevStep = () => {
+    setFormStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateStep(formStep)) return;
+  
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("userToken", data.token);
+        setShowSuccessMessage(true); // This triggers the useEffect redirect
+      } else {
+        throw new Error(data.message || "Registration failed");
+      }
+    } catch (error) {
+      alert(error.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };  
+
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.background}></div>
-      <div style={styles.container}>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        position: "relative",
+        overflow: "hidden",
+        background: `linear-gradient(${gradientAngle}deg, #3b82f6, #06b6d4)`,
+      }}
+    >
+      {particles.map((p) => (
         <motion.div
-          style={styles.card}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <h2 style={styles.heading}>Register to go in Ssk&apos;s Web</h2>
+          key={p.id}
+          initial={{ opacity: 0 }}
+          animate={{ x: `${p.x}vw`, y: `${p.y}vh`, opacity: 0.4 }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, repeatType: "reverse" }}
+          style={{
+            position: "absolute",
+            backgroundColor: "white",
+            borderRadius: "50%",
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+          }}
+        />
+      ))}
 
-          {/* Photo Upload */}
-          <motion.div
-            style={styles.photoContainer}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <label style={styles.uploadLabel}>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handlePhotoUpload}
-              />
-              {formData.photo ? (
-                <motion.img
-                  src={formData.photo}
-                  alt="Profile"
-                  style={styles.profileImage}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                />
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          backgroundColor: "white",
+          borderRadius: "1rem",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          padding: "2rem",
+          width: "100%",
+          maxWidth: "28rem",
+          zIndex: 10,
+        }}
+      >
+        <h2 style={{ 
+          fontSize: "1.5rem", 
+          fontWeight: "bold", 
+          marginBottom: "0.5rem", 
+          textAlign: "center" 
+        }}>
+          {fieldGroups[formStep].title}
+        </h2>
+        <p style={{ 
+          fontSize: "0.875rem", 
+          color: "#6b7280", 
+          marginBottom: "1.5rem", 
+          textAlign: "center" 
+        }}>
+          {fieldGroups[formStep].description}
+        </p>
+
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {fieldGroups[formStep].fields.map((field) => (
+            <div key={field}>
+              {field === "photo" ? (
+                <>
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} />
+                  {uploadProgress > 0 && (
+                    <div style={{ 
+                      width: "100%", 
+                      backgroundColor: "#e5e7eb", 
+                      borderRadius: "9999px", 
+                      height: "0.5rem", 
+                      marginTop: "0.5rem" 
+                    }}>
+                      <div
+                        style={{ 
+                          backgroundColor: "#3b82f6", 
+                          height: "0.5rem", 
+                          borderRadius: "9999px", 
+                          transition: "all 0.2s", 
+                          width: `${uploadProgress}%` 
+                        }}
+                      ></div>
+                    </div>
+                  )}
+                  {photoPreview && (
+                    <img
+                      src={photoPreview}
+                      alt="Preview"
+                      style={{ 
+                        width: "5rem", 
+                        height: "5rem", 
+                        marginTop: "0.75rem", 
+                        borderRadius: "50%", 
+                        objectFit: "cover" 
+                      }}
+                    />
+                  )}
+                </>
               ) : (
-                <motion.div style={styles.uploadBox}>Upload</motion.div>
+                <>
+                  <input
+                    type={field === "password" ? "password" : "text"}
+                    name={field}
+                    placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                    value={formData[field]}
+                    onChange={handleChange}
+                    style={{ 
+                      width: "100%", 
+                      padding: "0.5rem", 
+                      border: "1px solid #d1d5db", 
+                      borderRadius: "0.375rem" 
+                    }}
+                  />
+                  {errors[field] && (
+                    <p style={{ color: "#ef4444", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+                      {errors[field]}
+                    </p>
+                  )}
+                </>
               )}
-            </label>
-          </motion.div>
+            </div>
+          ))}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} style={styles.form}>
-            {["name", "email", "phone", "password", "organization"].map(
-              (field, idx) => (
-                <motion.input
-                  key={idx}
-                  type={
-                    field === "password"
-                      ? "password"
-                      : field === "email"
-                        ? "email"
-                        : "text"
-                  }
-                  name={field}
-                  placeholder={
-                    field === "name"
-                      ? "Full Name"
-                      : field.charAt(0).toUpperCase() + field.slice(1)
-                  }
-                  value={formData[field]}
-                  onChange={handleChange}
-                  style={styles.input}
-                  whileFocus={{ scale: 1.03 }}
-                  transition={{ duration: 0.2 }}
-                />
-              )
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.5rem" }}>
+            {formStep > 0 && (
+              <button 
+                type="button" 
+                onClick={prevStep} 
+                style={{ color: "#3b82f6", fontWeight: 600 }}
+              >
+                Back
+              </button>
             )}
+            {formStep < fieldGroups.length - 1 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                style={{ 
+                  backgroundColor: "#3b82f6", 
+                  color: "white", 
+                  paddingLeft: "1rem", 
+                  paddingRight: "1rem", 
+                  paddingTop: "0.5rem", 
+                  paddingBottom: "0.5rem", 
+                  borderRadius: "0.375rem" 
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{ 
+                  backgroundColor: "#10b981", 
+                  color: "white", 
+                  paddingLeft: "1rem", 
+                  paddingRight: "1rem", 
+                  paddingTop: "0.5rem", 
+                  paddingBottom: "0.5rem", 
+                  borderRadius: "0.375rem" 
+                }}
+              >
+                {isLoading ? "Registering..." : "Submit"}
+              </button>
+            )}
+          </div>
+        </form>
 
-            <motion.button
-              type="submit"
-              style={styles.button}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              Register
-            </motion.button>
-            <motion.a
-              href="/login"
-              style={styles.signupLink}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              Already registered? Just Log In now
-            </motion.a>
-          </form>
-        </motion.div>
-      </div>
-      <Footer />
+        {showSuccessMessage && (
+          <div style={{ 
+            color: "#059669", 
+            textAlign: "center", 
+            fontWeight: 500, 
+            marginTop: "1rem" 
+          }}>
+            ✅ Registered Successfully!
+          </div>
+        )}
+      </motion.div>
     </div>
   );
-};
-
-const styles = {
-  wrapper: {
-    position: "relative",
-    width: "100%",
-    minHeight: "100vh",
-    overflow: "hidden",
-  },
-  background: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundImage: "url('/background/data.jpg')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    filter: "blur(8px)",
-    zIndex: 0,
-  },
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    position: "relative",
-    zIndex: 1,
-    padding: "20px",
-  },
-  card: {
-    backgroundColor: "rgba(30, 30, 30, 0.9)",
-    padding: "25px",
-    borderRadius: "15px",
-    boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.4)",
-    width: "360px",
-    textAlign: "center",
-    backdropFilter: "blur(8px)",
-  },
-  signupLink: {
-    color: "#9370DB",
-    marginTop: "10px",
-    fontSize: "14px",
-    textDecoration: "underline",
-    cursor: "pointer",
-  },
-  
-  heading: {
-    color: "#fff",
-    fontSize: "20px",
-    marginBottom: "15px",
-  },
-  photoContainer: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: "15px",
-  },
-  uploadLabel: {
-    cursor: "pointer",
-  },
-  profileImage: {
-    width: "80px",
-    height: "80px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    border: "3px solid #9370DB",
-    transition: "transform 0.3s",
-  },
-  uploadBox: {
-    width: "80px",
-    height: "80px",
-    backgroundColor: "#444",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "50%",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #555",
-    backgroundColor: "#2E2E2E",
-    color: "#fff",
-    fontSize: "15px",
-    outline: "none",
-    transition: "border-color 0.3s ease",
-  },
-  button: {
-    width: "100%",
-    padding: "12px",
-    backgroundColor: "#9370DB",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "17px",
-    marginTop: "10px",
-  },
 };
 
 export default SignUpPage;

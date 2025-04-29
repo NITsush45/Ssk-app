@@ -6,13 +6,15 @@ const Navigation = () => {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
     setLoaded(true);
+    };
   }, []);
 
   return (
     <nav
       style={{
-        backgroundColor: "rgba(0, 0, 0, 0.7)", // Semi-transparent black
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
         position: "fixed",
         top: 0,
         left: 0,
@@ -43,7 +45,7 @@ const Navigation = () => {
           }}
           className="text-white font-lobster font-medium transition-all"
           style={{
-            background: btn.gradient || "linear-gradient(45deg, #4B0082, #00FFFF)",
+            background: btn.gradient || "linear-gradient(45deg, #fcb045, #fd1d1d, #833ab4)",
             border: "none",
             color: btn.Color || "#FFFF00",
             textDecoration: "none",

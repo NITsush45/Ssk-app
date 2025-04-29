@@ -1,8 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        domains: ["i.scdn.co","i.ytimg.com","miro.medium.com","pitayan.com"],
-      },
+  reactStrictMode: false,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "i.scdn.co" },
+      { protocol: "https", hostname: "i.ytimg.com" },
+      { protocol: "https", hostname: "miro.medium.com" },
+      { protocol: "https", hostname: "pitayan.com" }
+    ]
+  }
 };
 
 export default nextConfig;

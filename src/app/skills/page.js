@@ -1,71 +1,437 @@
 "use client";
 import Navigation from "@/components/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import Footer from "../projects/footer";
+// Import icons from react-icons
+import { 
+  BiCodeAlt, BiServer, BiData, BiMobileAlt, BiGame, BiCloud,
+  BiCodeCurly, BiPalette, BiAtom, BiLaptop, BiBot
+} from "react-icons/bi";
+import { FaReact, FaDatabase, FaNodeJs, FaAndroid, FaUnity, FaDocker } from "react-icons/fa";
+import { AiOutlineApi, AiOutlineLock } from "react-icons/ai";
+import { SiTensorflow, SiPytorch, SiJupyter, SiFlutter, SiKubernetes } from "react-icons/si";
+import { MdQueryStats, MdOutlineManageAccounts } from "react-icons/md";
+import { IoLanguage } from "react-icons/io5";
+import { HiOutlineCode } from "react-icons/hi";
 
 const Skills = () => {
-  // Main skill categories with detailed descriptions and manually defined skill levels
+  // Function to add animations once component is mounted
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const styleSheet = document.styleSheets[0];
+      
+      // Add card animations
+      styleSheet.insertRule(
+        `
+        .animatedCard {
+          animation: fadeInSlide 0.8s ease forwards;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+      
+      styleSheet.insertRule(
+        `
+        .animatedSmallCard {
+          animation: popIn 0.6s ease forwards;
+          animation-delay: calc(var(--order, 0) * 0.1s);
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+      
+      // Define the animations
+      styleSheet.insertRule(
+        `
+        @keyframes fadeInSlide {
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+      
+      styleSheet.insertRule(
+        `
+        @keyframes popIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          70% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+      
+      // Add hover effects
+      styleSheet.insertRule(
+        `
+        .animatedCard:hover {
+          transform: translateY(-5px);
+          box-shadow: 0px 12px 25px rgba(0, 0, 0, 0.5);
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+      
+      styleSheet.insertRule(
+        `
+        .animatedSmallCard:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+
+      // Add star hover effect
+      styleSheet.insertRule(
+        `
+        .star:hover {
+          transform: scale(1.2);
+        }
+        `,
+        styleSheet.cssRules.length
+      );
+
+      // Set different animation delays for small cards
+      for (let i = 0; i < 6; i++) {
+        styleSheet.insertRule(
+          `
+          .animatedSmallCard:nth-child(${i + 1}) {
+            --order: ${i};
+          }
+          `,
+          styleSheet.cssRules.length
+        );
+      }
+    }
+  }, []);
+
+  // Main skill categories with detailed descriptions, manually defined skill levels, and icons
   const mainSkills = [
+    {
+      heading: "Languages",
+      text: "Proficient in Programming languages like:- Java, Python, C, C++, C#, PHP, Dart, Kotlin and web programming languages like JavaScript, HTML, CSS, VHDL",
+      skillLevel: 90,
+      icon: <HiOutlineCode size={36} />
+    },
     {
       heading: "Web Development",
       text: "Proficient in modern frontend frameworks like React, Next.js, and Vue.js. Experienced in building responsive, accessible, and performant web applications with clean and maintainable code. Skilled in HTML5, CSS3, JavaScript ES6+, TypeScript, and various CSS frameworks including Tailwind, Bootstrap, and Material UI.",
-      skillLevel: 100
+      skillLevel: 90,
+      icon: <FaReact size={36} />
     },
     {
       heading: "Backend Development",
-      text: "Strong foundation in Node.js, Express, and database technologies including MongoDB, PostgreSQL, and Firebase. Capable of designing RESTful APIs and implementing server-side logic. Experienced in building scalable microservices, handling authentication/authorization, and optimizing database performance for high-traffic applications.",
-      skillLevel: 88
+      text: "Strong foundation in Node.js, Express, Django, Flask. Capable of designing RESTful APIs and implementing server-side logic. Experienced in building scalable microservices, handling authentication/authorization, and optimizing database performance for high-traffic applications.",
+      skillLevel: 85,
+      icon: <BiServer size={36} />
     },
+    {
+      heading: "Databases",
+      text: "Hands on experience with database technologies like MongoDB, PostgreSQL, MySQL, Firebase, PineconeDB. Along with manually managing database with the help of tools like DBeaver.",
+      skillLevel: 85,
+      icon: <FaDatabase size={36} />
+    },
+    {
+      heading: "Artificial Intelligence & Machine Learning (AI/ML)",
+      text: "Expertise in developing AI/ML models, including supervised and unsupervised learning, deep learning architectures, data science, and analytics. Proficient in training, fine-tuning, and deploying ML/DL models using TensorFlow, Keras, PyTorch Vision, and Convolutional Neural Networks (CNN). Experienced in data manipulation, statistical analysis, and visualization with NumPy, Pandas, SciPy, Matplotlib, Seaborn, Plotly, and Dash. Skilled in Natural Language Processing (NLP) with NLTK, Hugging Face API, and SpeechRecognition for text processing, sentiment analysis, and language model fine-tuning. Proficient in Computer Vision applications using OpenCV, Pillow, and Librosa for object detection, facial recognition, and image classification. Experienced with AI development platforms such as Jupyter, Google Colab, and MATLAB for model experimentation, optimization, and cloud-based training.",
+      skillLevel: 92,
+      icon: <BiBot size={36} />
+    },
+    {
+      heading: "App/Android/iOS Development",
+      text: "Proficient in developing cross-platform mobile applications using Flutter and Dart. Experienced in native Android development with Kotlin and Java, leveraging Android Studio and Android SDK. Skilled in implementing Material Design, state management, Firebase integration, API handling, and performance optimization for scalable mobile apps.",
+      skillLevel: 90,
+      icon: <BiMobileAlt size={36} />
+    },
+    {
+      heading: "Game Development",
+      text: "Experienced in game development using Unity and C#. Skilled in designing interactive gameplay mechanics, physics simulations, and 2D/3D rendering. Proficient in optimizing game performance, implementing AI-driven behaviors, and integrating assets for an immersive gaming experience.",
+      skillLevel: 84,
+      icon: <BiGame size={36} />
+    },
+    {
+      heading: "Cloud Platforms",
+      text: "Proficient in cloud platforms like AWS, Azure, and Google Cloud. Experienced in deploying applications on cloud servers, managing cloud storage, and implementing serverless computing architectures. Skilled in configuring cloud services, managing cloud databases, and automating cloud-based workflows.",
+      skillLevel: 78,
+      icon: <BiCloud size={36} />
+    }            
   ];
 
-  // Related smaller skill sets for each main skill with manually defined skill levels
+  // Related smaller skill sets for each main skill with manually defined skill levels and icons
   const relatedSkills = [
+    [
+      {
+        heading: "General Purpose Languages",
+        text: "Java, Python, C, C++, C#, PHP, Dart, Kotlin",
+        skillLevel: 92,
+        icon: <BiCodeAlt size={24} />
+      },
+      {
+        heading: "Web Technologies Languages",
+        text: "JavaScript, HTML, CSS, VHDL",
+        skillLevel: 90,
+        icon: <HiOutlineCode size={24} />
+      },
+    ],
     // Web Development related skills
     [
       {
         heading: "Frontend Frameworks",
-        text: "React, Next.js, Vue, Angular",
-        skillLevel: 95
+        text: "React, Next.js, Vue, Angular, React Native, Three.js",
+        skillLevel: 95,
+        icon: <FaReact size={24} />
       },
       {
         heading: "CSS & Styling",
-        text: "Tailwind CSS, Styled Components, SASS",
-        skillLevel: 90
+        text: "Tailwind CSS, Styled Components, SASS, Material-UI, Bootstrap, DaisyUI",
+        skillLevel: 95,
+        icon: <BiPalette size={24} />
       },
       {
         heading: "State Management",
         text: "Redux, Context API, Zustand",
-        skillLevel: 85
+        skillLevel: 85,
+        icon: <BiAtom size={24} />
       },
       {
         heading: "Web Performance",
         text: "Lazy Loading, Code Splitting, Optimization",
-        skillLevel: 80
+        skillLevel: 87,
+        icon: <BiLaptop size={24} />
       },
+      {
+        heading: "Styling & UI Components",
+        text:"Tailwind CSS, DaisyUI, Material Design, React-Icons, React-Calendar, Toast",
+        skillLevel: 90,
+        icon: <BiPalette size={24} />
+      }
     ],
     // Backend Development related skills
     [
       {
-        heading: "Databases",
-        text: "MongoDB, PostgreSQL, MySQL, Firebase",
-        skillLevel: 87
+        heading: "Frameworks",
+        text: "Django, Express.js, Node.js, Flask, Laravel",
+        skillLevel: 90,
+        icon: <FaNodeJs size={24} />
       },
       {
         heading: "API Development",
-        text: "REST, GraphQL, WebSockets",
-        skillLevel: 92
+        text: "REST, GraphQL, WebSockets, Postman, Docker",
+        skillLevel: 92,
+        icon: <AiOutlineApi size={24} />
       },
       {
         heading: "Authentication",
         text: "JWT, OAuth, Session Management",
-        skillLevel: 83
+        skillLevel: 83,
+        icon: <AiOutlineLock size={24} />
       },
       {
         heading: "Server Technologies",
         text: "Express, Fastify, NestJS",
-        skillLevel: 89
+        skillLevel: 89,
+        icon: <BiServer size={24} />
+      },
+      {
+        heading: "Real-Time Communication",
+        text: "Socket.io",
+        skillLevel: 88,
+        icon: <BiCodeCurly size={24} />
+      },
+      {
+        heading: "Security & Authentication",
+        text: "Bcrypt",
+        skillLevel: 80,
+        icon: <AiOutlineLock size={24} />
+      },
+      {
+        heading: "Caching",
+        text: "Redis, Memcached",
+        skillLevel: 85,
+        icon: <BiCodeCurly size={24} />
+      }
+    ],
+    [
+      {
+        heading: "NoSQL Databases",
+        text: "Firebase, MongoDB, PineconeDB (Vector Database)",
+        skillLevel: 87,
+        icon: <FaDatabase size={24} />
+      },
+      {
+        heading: "SQL Database",
+        text: "PostgreSQL",
+        skillLevel: 80,
+        icon: <FaDatabase size={24} />
+      },
+      {
+        heading: "Query Language",
+        text: "GraphQL(query language for APIs)",
+        skillLevel: 82,
+        icon: <MdQueryStats size={24} />
+      },
+      {
+        heading: "Database Performance",
+        text: "Indexing, Query Optimization, Denormalization",
+        skillLevel: 80,
+        icon: <BiData size={24} />
+      },
+      {
+        heading: "Database Management",
+        text: "DBeaver, MySQL Workbench",
+        skillLevel: 85,
+        icon: <MdOutlineManageAccounts size={24} />
+      }
+    ],
+    [
+      {
+        heading: "Machine Learning & Deep Learning",
+        text: "TensorFlow, Keras, PyTorch Vision, CNN",
+        skillLevel: 90,
+        icon: <SiTensorflow size={24} />
+      },
+      {
+        heading: "Data Science & Analytics",
+        text: "NumPy, Pandas, SciPy, Matplotlib, Seaborn, Plotly, Dash",
+        skillLevel: 90,
+        icon: <BiData size={24} />
+      },
+      {
+        heading: "Natural Language Processing (NLP)",
+        text: "NLTK, Hugging Face API, SpeechRecognition",
+        skillLevel: 85,
+        icon: <BiCodeAlt size={24} />
+      },
+      {
+        heading: "Computer Vision",
+        text: "OpenCV, Pillow, Librosa",
+        skillLevel: 88,
+        icon: <BiCodeCurly size={24} />
+      },
+      {
+        heading: "AI Development Platforms",
+        text: "Jupyter, Google Colab, MATLAB",
+        skillLevel: 90,
+        icon: <SiJupyter size={24} />
       },
     ],
+    [
+      {
+        heading: "App & Android/iOS Development",
+        text: "Flutter Development, Kotlin, Android Studio",
+        skillLevel: 90,
+        icon: <SiFlutter size={24} />
+      },
+      {
+        heading: "React Native",
+        text: "React Native",
+        skillLevel: 90,
+        icon: <FaReact size={24} />
+      },
+      {
+        heading: "iOS Development",
+        text: "Swift, Objective-C, Xcode",
+        skillLevel: 85,
+        icon: <BiMobileAlt size={24} />
+      },
+      {
+        heading: "Android Development",
+        text: "Java, Kotlin",
+        skillLevel: 90,
+        icon: <FaAndroid size={24} />
+      },
+      {
+        heading: "Mobile App Development Platforms",
+        text: "App Store, Google Play Store, TestFlight",
+        skillLevel: 90,
+        icon: <BiMobileAlt size={24} />
+      },
+    ],
+    [
+      {
+        heading: "Game Development",
+        text: "Unity, C#",
+        skillLevel: 80,
+        icon: <FaUnity size={24} />
+      },
+      {
+        heading: "Game Engine",
+        text: "Unity, Unreal Engine",
+        skillLevel: 85,
+        icon: <BiGame size={24} />
+      },
+      {
+        heading: "Game Design",
+        text: "Game Design Document (GDD), Prototyping, Storyboarding, GIMP Art",
+        skillLevel: 80,
+        icon: <BiPalette size={24} />
+      },
+      {
+        heading: "Game Development Platforms",
+        text: "Unity, Unreal Engine, GameMaker Studio",
+        skillLevel: 90,
+        icon: <FaUnity size={24} />
+      },
+    ],
+    [
+      {
+        heading: "Cloud Platforms",
+        text: "AWS, Azure, Google Cloud",
+        skillLevel: 80,
+        icon: <BiCloud size={24} />
+      },
+      {
+        heading: "Serverless Computing",
+        text: "AWS Lambda, Google Cloud Functions, Azure Functions",
+        skillLevel: 85,
+        icon: <BiCodeCurly size={24} />
+      },
+      {
+        heading: "Containerization",
+        text: "Docker, Kubernetes",
+        skillLevel: 80,
+        icon: <FaDocker size={24} />
+      },
+      {
+        heading: "DevOps",
+        text: "CI/CD, Jenkins, GitLab CI/CD",
+        skillLevel: 85,
+        icon: <BiCodeAlt size={24} />
+      },
+      {
+        heading: "Cloud Monitoring & Logging",
+        text: "AWS CloudWatch, Google Cloud Monitoring, Azure Monitor",
+        skillLevel: 80,
+        icon: <BiCloud size={24} />
+      },
+      {
+        heading: "Cloud Architecture Design",
+        text: "AWS CloudFormation, Google Cloud Deployment Manager, Azure Resource Manager",
+        skillLevel: 85,
+        icon: <SiKubernetes size={24} />
+      },
+    ]
   ];
 
   // Function to render star ratings based on skill level
@@ -84,6 +450,7 @@ const Skills = () => {
               color: i < fullStars ? "#00f9ff" : "#555",
               fontSize: size === "large" ? "18px" : "14px",
             }}
+            className="star"
           >
             ★
           </span>
@@ -99,7 +466,7 @@ const Skills = () => {
         <div style={styles.centerText}>My Skills & Expertise</div>
       </div>
       <div style={styles.contentWrapper}>
-        <div style={styles.line}></div> {/* Vertical line (no longer animated) */}
+        <div style={styles.line}></div> {/* Vertical line */}
         
         {mainSkills.map((mainSkill, idx) => (
           <div key={idx} style={styles.skillSection}>
@@ -119,6 +486,11 @@ const Skills = () => {
               ></div>
 
               <div style={styles.mainCard} className="animatedCard">
+                <div style={styles.iconContainer}>
+                  <div style={styles.iconWrapper}>
+                    {mainSkill.icon}
+                  </div>
+                </div>
                 <h2 style={styles.mainHeading}>{mainSkill.heading}</h2>
                 <p style={styles.mainText}>{mainSkill.text}</p>
                 {/* Skill level indicator with manual value */}
@@ -144,6 +516,9 @@ const Skills = () => {
             }}>
               {relatedSkills[idx].map((skill, skillIdx) => (
                 <div key={skillIdx} style={styles.smallCard} className="animatedSmallCard">
+                  <div style={styles.smallIconContainer}>
+                    {skill.icon}
+                  </div>
                   <h3 style={styles.smallHeading}>{skill.heading}</h3>
                   <p style={styles.smallText}>{skill.text}</p>
                   {/* Small skill level indicator with manual value */}
@@ -263,6 +638,29 @@ const styles = {
     textAlign: "center",
     zIndex: 1,
     transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    position: "relative",
+  },
+  iconContainer: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "15px",
+  },
+  iconWrapper: {
+    background: "linear-gradient(135deg, #00f9ff, #4B0082)",
+    borderRadius: "50%",
+    width: "70px",
+    height: "70px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+    color: "#fff",
+  },
+  smallIconContainer: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "10px",
+    color: "#00f9ff",
   },
   mainHeading: {
     color: "#fff",
