@@ -8,7 +8,17 @@ const nextConfig = {
       { protocol: "https", hostname: "miro.medium.com" },
       { protocol: "https", hostname: "pitayan.com" }
     ]
-  }
+  },
+  // Added configurations from the provided module.exports
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ["firebase-admin"],
+  },
 };
 
 export default nextConfig;

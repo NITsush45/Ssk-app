@@ -1,62 +1,59 @@
 "use client";
+export const dynamicSetting = 'force-dynamic';
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { FiSearch } from "react-icons/fi";
 import bg from "../../public/background/codebg.jpg";
-import dynamic from 'next/dynamic';
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ClientOnly from "@/components/ClientOnly";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from '@/hooks/useAuth';
+import dynamic from "next/dynamic";
+
+// Add this helper function at the top before any components
+const isBrowser = () => typeof window !== "undefined";
+
+// Create SafeImage component for handling client/server differences
+const SafeImage = ({ src, alt, ...props }) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  return isClient ? (
+    <Image src={src} alt={alt} {...props} />
+  ) : (
+    <div style={{ position: 'relative', ...props.style }} />
+  );
+};
+
+// Dynamically import Material UI Icon with proper SSR handling
+const MusicNoteIcon = dynamic(
+  () => import("@mui/icons-material/MusicNote").then((mod) => mod.default),
+  { 
+    ssr: false,
+    loading: () => <span style={{ width: 24, height: 24 }} /> 
+  }
+);
 
 // Dynamically import components
-const RenderModel = dynamic(
-  () => import("@/components/RenderModel"),
-  { ssr: false, loading: () => <div>Loading 3D...</div> }
-);
+const RenderModel = dynamic(() => import("@/components/RenderModel"), {
+  ssr: false, // ← Disables SSR
+  loading: () => <div>Loading 3D...</div>,
+});
 
-const Model = dynamic(
-  () => import("@/components/models/model"),
-  { ssr: false }
-);
+const Model = dynamic(() => import("@/components/models/model"), {
+  ssr: false,
+});
 
-const Navigation = dynamic(
-  () => import("@/components/navigation"),
-  { ssr: false }
-);
+const Navigation = dynamic(() => import("@/components/navigation"), {
+  ssr: false,
+});
 
-const Footer = dynamic(
-  () => import("./projects/footer"),
-  { ssr: false }
-);
-
+const Footer = dynamic(() => import("./projects/footer"), { ssr: false });
 
 export default function Home() {
-  // Authentication check
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-  
-  // If authentication is still loading, show a loading state
-  if (isLoading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100vh",
-        background: "#000"
-      }}>
-        <p style={{ color: "#00FF00", fontSize: "18px" }}>Loading...</p>
-      </div>
-    );
-  }
-  
-  // If not authenticated, don't render the main content
-  if (!isAuthenticated) {
-    return null; // You could also redirect to login page if needed
-  }
-
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +61,11 @@ export default function Home() {
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
+  const router = useRouter();
   
+  // No longer need this since we'll use isBrowser() function directly
+  // const isBrowser = useBrowserFeatures();
+
   const swipeImages = [
     "/background/sskimg2.jpeg",
     "/background/sskimg.jpeg",
@@ -75,20 +76,39 @@ export default function Home() {
     "/background/sskimg7.jpeg",
     "/background/sskimg8.jpeg",
   ];
-  
+
+  // Improved swipe handler function
+  const handleSwipe = (direction) => {
+    if (!isBrowser()) return;
+    
+    setSwipeIndex(prev => 
+      (prev + direction + swipeImages.length) % swipeImages.length
+    );
+  };
+
+  // Fixed swipe interval effect with clean browser check
   useEffect(() => {
+    if (!isBrowser()) return;
+    
     const interval = setInterval(() => {
       setSwipeIndex((prev) => (prev + 1) % swipeImages.length);
     }, 4000);
+    
     return () => clearInterval(interval);
   }, [swipeImages.length]);
-  
+
   useEffect(() => {
-    fetchSpotifyTracks("top hits");
+    if (isBrowser()) {
+      fetchSpotifyTracks("top hits");
+    }
   }, []);
 
   async function fetchSpotifyTracks(query) {
     if (!query.trim()) return;
+
+    // Make sure we're in a browser environment
+    if (!isBrowser()) return;
+
     setLoading(true);
     setError("");
     try {
@@ -120,11 +140,41 @@ export default function Home() {
     }
   }
 
+  // Create CurrentImage component for conditional rendering
+  const CurrentImage = () => {
+    if (!isBrowser()) return (
+      <div style={{ 
+        position: "relative", 
+        width: "150px", 
+        height: "150px", 
+        borderRadius: "30px",
+        background: "rgba(0,0,0,0.2)" 
+      }} />
+    );
+    
+    return (
+      <div style={{ position: "relative", width: "150px", height: "150px", flexShrink: 0 }}>
+        <SafeImage
+          src={swipeImages[swipeIndex]}
+          alt={`Music related ${swipeIndex + 1}`}
+          fill
+          style={{
+            borderRadius: "30px",
+            objectFit: "cover",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          }}
+        />
+      </div>
+    );
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
       <ClientOnly>
         <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
-          <Image
+          <SafeImage
             src={bg}
             alt="background-image"
             fill
@@ -158,7 +208,7 @@ export default function Home() {
             <Navigation />
           </div>
         </ClientOnly>
-        
+
         <div
           style={{
             position: "absolute",
@@ -204,11 +254,7 @@ export default function Home() {
             }}
           >
             <button
-              onClick={() =>
-                setSwipeIndex(
-                  (prev) => (prev - 1 + swipeImages.length) % swipeImages.length
-                )
-              }
+              onClick={() => handleSwipe(-1)}
               style={{
                 background: "rgba(255, 255, 255, 0.2)",
                 border: "none",
@@ -224,30 +270,10 @@ export default function Home() {
               ‹
             </button>
 
-            <div
-              style={{
-                position: "relative",
-                width: "150px",
-                height: "150px",
-                flexShrink: 0,
-              }}
-            >
-              <Image
-                src={swipeImages[swipeIndex]}
-                alt={`Music related ${swipeIndex + 1}`}
-                fill
-                style={{
-                  borderRadius: "30px",
-                  objectFit: "cover",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-            </div>
+            <CurrentImage />
 
             <button
-              onClick={() =>
-                setSwipeIndex((prev) => (prev + 1) % swipeImages.length)
-              }
+              onClick={() => handleSwipe(1)}
               style={{
                 background: "rgba(255, 255, 255, 0.2)",
                 border: "none",
@@ -356,7 +382,10 @@ export default function Home() {
               )}
 
               <button
-                onClick={() => setExpanded(!expanded)}
+                onClick={() => {
+                  if (!isBrowser()) return;
+                  setExpanded(!expanded);
+                }}
                 style={{
                   marginTop: "8px",
                   padding: "5px",
@@ -374,7 +403,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         <div
           style={{
             position: "relative",
@@ -400,7 +429,7 @@ export default function Home() {
                 gap: "5px",
               }}
             >
-              <MusicNoteIcon style={{ color: "#FFD700" }} />
+              {isBrowser() && <MusicNoteIcon style={{ color: "#FFD700" }} />}
               Your Song Buddy
             </h2>
 
@@ -418,9 +447,11 @@ export default function Home() {
                 placeholder="Enjoy songs with Ssk...."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && fetchSpotifyTracks(searchQuery)
-                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && isBrowser()) {
+                    fetchSpotifyTracks(searchQuery);
+                  }
+                }}
                 style={{
                   width: "30vh",
                   padding: "8px",
@@ -432,9 +463,9 @@ export default function Home() {
               />
               <button
                 onClick={() => {
+                  if (!isBrowser()) return;
                   setIsClicked(true);
                   fetchSpotifyTracks(searchQuery);
-                  setTimeout(() => setIsClicked(false), 200);
                 }}
                 style={{
                   background: "#9370DB",
@@ -482,7 +513,8 @@ export default function Home() {
                       borderRadius: "10px",
                     }}
                   >
-                    <Image
+                    {/* Use SafeImage for track images */}
+                    <SafeImage
                       src={track.image}
                       alt={track.name}
                       width={120}
@@ -508,23 +540,25 @@ export default function Home() {
           </div>
         </div>
 
-        <ClientOnly>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 14.5,
-              pointerEvents: "none",
-            }}
-          >
-            <RenderModel>
-              <Model />
-            </RenderModel>
-          </div>
-        </ClientOnly>
+        {isBrowser() && (
+          <ClientOnly>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 14.5,
+                pointerEvents: "none",
+              }}
+            >
+              <RenderModel>
+                <Model />
+              </RenderModel>
+            </div>
+          </ClientOnly>
+        )}
       </main>
 
       <ClientOnly>

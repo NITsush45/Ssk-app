@@ -1,6 +1,9 @@
 import pool from '@/lib/db';
 import nodemailer from 'nodemailer';
 
+
+export const runtime = 'nodejs';
+
 export async function POST(req) {
   const requiredFields = ['name', 'email', 'subject', 'category', 'message'];
   
@@ -55,7 +58,9 @@ export async function POST(req) {
 
     // Send email notification
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD,
