@@ -41,7 +41,8 @@ export async function POST(req) {
 
     // Insert into PostgreSQL
     const client = await pool.connect();
-    const result = await client.query(
+try {
+  const result = await client.query(
       `INSERT INTO contact_submissions 
       (name, email, subject, category, message)
       VALUES ($1, $2, $3, $4, $5)
@@ -54,7 +55,9 @@ export async function POST(req) {
         formData.message
       ]
     );
+  } finally {
     client.release();
+  }
 
     // Send email notification
     const transporter = nodemailer.createTransport({
